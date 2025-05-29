@@ -8,9 +8,20 @@
 - Google Gemini 2.0 Flash를 활용한 질의응답
 - Streamlit 기반의 사용자 친화적 웹 인터페이스
 
+## 필요 조건
+- Python 3.8 이상
+- OpenAI API 키 (임베딩용)
+- Google AI Studio API 키 (LLM용)
+
 ## 설치 방법
 
-1. 가상환경 생성 및 활성화:
+1. 저장소 클론:
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+cd YOUR_REPOSITORY_NAME
+```
+
+2. 가상환경 생성 및 활성화:
 ```bash
 python -m venv venv
 # Windows
@@ -19,12 +30,12 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-2. 의존성 설치:
+3. 의존성 설치:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. 환경 변수 설정:
+4. 환경 변수 설정:
 `.env` 파일을 생성하고 API 키들을 추가:
 ```
 OPENAI_API_KEY=your_openai_api_key_here
@@ -61,10 +72,31 @@ streamlit run app.py
 ## 디렉토리 구조
 ```
 reg/
-├── app.py              # Streamlit 메인 애플리케이션
+├── app.py                 # Streamlit 메인 애플리케이션
 ├── document_processor.py  # 문서 처리 모듈
-├── vector_store.py     # 벡터 스토어 관리
-├── requirements.txt    # 의존성
-├── .env               # 환경 변수 (API 키)
-├── data/              # 규정 문서들 (docx 파일)
-└── chroma_db/         # 벡터 데이터베이스 저장소 
+├── vector_store.py        # 벡터 스토어 관리
+├── requirements.txt       # 의존성
+├── .env                  # 환경 변수 (API 키)
+├── data/                 # 규정 문서들 (docx 파일)
+└── chroma_db/            # 벡터 데이터베이스 저장소 
+```
+
+## 기술 스택
+- **프론트엔드**: Streamlit
+- **임베딩**: OpenAI text-embedding-3-small
+- **LLM**: Google Gemini 2.0 Flash
+- **벡터 데이터베이스**: ChromaDB
+- **문서 처리**: python-docx
+
+## 라이선스
+MIT License
+
+## 기여 방법
+1. 이 저장소를 포크합니다
+2. 새로운 기능 브랜치를 생성합니다 (`git checkout -b feature/AmazingFeature`)
+3. 변경사항을 커밋합니다 (`git commit -m 'Add some AmazingFeature'`)
+4. 브랜치에 푸시합니다 (`git push origin feature/AmazingFeature`)
+5. Pull Request를 생성합니다
+
+## 문의
+문제가 있거나 질문이 있으시면 GitHub Issues를 통해 문의해주세요.
