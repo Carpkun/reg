@@ -65,7 +65,7 @@ class VectorStore:
         
         # Chroma 클라이언트 초기화
         try:
-            debug_log(f"�� [DEBUG] Chroma 클라이언트 초기화 시작")
+            debug_log(f"🔍 [DEBUG] Chroma 클라이언트 초기화 시작")
             abs_path = os.path.abspath(persist_directory)
             debug_log(f"🔍 [DEBUG] 절대 경로: {abs_path}")
             debug_log(f"🔍 [DEBUG] 디렉토리 존재 여부: {os.path.exists(abs_path)}")
@@ -101,15 +101,39 @@ class VectorStore:
         try:
             debug_log(f"🔍 [DEBUG] _initialize_vectorstore 시작")
             
-            # 기존 컬렉션이 있다면 로드
-            collections = self.client.list_collections()
-            debug_log(f"🔍 [DEBUG] 기존 컬렉션 수: {len(collections)}")
-            
-            if collections:
+            # 기존 컬렉션이 있다면 로드 (ChromaDB v0.6.0 호환)
+            try:
+                collections = self.client.list_collections()
+                debug_log(f"🔍 [DEBUG] 기존 컬렉션 수: {len(collections)}")
+                
+                # ChromaDB v0.6.0에서는 컬렉션 이름을 직접 반환
+                collection_names = []
                 for col in collections:
-                    debug_log(f"🔍 [DEBUG] 기존 컬렉션: {col.name}")
+                    try:
+                        # 새 버전에서는 컬렉션 객체가 이름 문자열일 수 있음
+                        if hasattr(col, 'name'):
+                            collection_names.append(col.name)
+                        else:
+                            # v0.6.0에서는 직접 이름 문자열
+                            collection_names.append(str(col))
+                    except:
+                        # 안전한 문자열 변환
+                        collection_names.append(str(col))
+                
+                debug_log(f"🔍 [DEBUG] 컬렉션 이름들: {collection_names}")
+                collection_exists = self.collection_name in collection_names
+                
+            except Exception as e:
+                debug_log(f"⚠️ [WARNING] 컬렉션 목록 조회 오류: {str(e)}")
+                # 컬렉션 존재 여부를 직접 확인하는 방법
+                try:
+                    self.client.get_collection(self.collection_name)
+                    collection_exists = True
+                    debug_log(f"🔍 [DEBUG] get_collection으로 확인: 존재함")
+                except:
+                    collection_exists = False
+                    debug_log(f"🔍 [DEBUG] get_collection으로 확인: 존재하지 않음")
             
-            collection_exists = any(col.name == self.collection_name for col in collections)
             debug_log(f"🔍 [DEBUG] 타겟 컬렉션 '{self.collection_name}' 존재 여부: {collection_exists}")
             
             if collection_exists:
@@ -295,16 +319,45 @@ class VectorStore:
             debug_log(f"🔍 [DEBUG] persist_directory: {self.persist_directory}")
             debug_log(f"🔍 [DEBUG] collection_name: {self.collection_name}")
             
-            collections = self.client.list_collections()
-            debug_log(f"🔍 [DEBUG] 기존 컬렉션 수: {len(collections)}")
+            # ChromaDB v0.6.0 호환 컬렉션 존재 확인
+            collection_exists = False
+            try:
+                collections = self.client.list_collections()
+                debug_log(f"🔍 [DEBUG] 기존 컬렉션 수: {len(collections)}")
+                
+                # 컬렉션 이름 추출 (v0.6.0 호환)
+                collection_names = []
+                for col in collections:
+                    try:
+                        if hasattr(col, 'name'):
+                            collection_names.append(col.name)
+                        else:
+                            collection_names.append(str(col))
+                    except:
+                        collection_names.append(str(col))
+                
+                collection_exists = self.collection_name in collection_names
+                debug_log(f"🔍 [DEBUG] 컬렉션 이름들: {collection_names}")
+                
+            except Exception as e:
+                debug_log(f"⚠️ [WARNING] list_collections 오류: {str(e)}")
+                # 직접 확인 방법
+                try:
+                    self.client.get_collection(self.collection_name)
+                    collection_exists = True
+                except:
+                    collection_exists = False
             
-            collection_exists = any(col.name == self.collection_name for col in collections)
             debug_log(f"🔍 [DEBUG] 타겟 컬렉션 존재 여부: {collection_exists}")
             
             if collection_exists:
                 debug_log(f"🔍 [DEBUG] 컬렉션 '{self.collection_name}' 삭제 시작")
-                self.client.delete_collection(self.collection_name)
-                debug_log(f"✅ [SUCCESS] 컬렉션 '{self.collection_name}'을 삭제했습니다.")
+                try:
+                    self.client.delete_collection(self.collection_name)
+                    debug_log(f"✅ [SUCCESS] 컬렉션 '{self.collection_name}'을 삭제했습니다.")
+                except Exception as e:
+                    debug_log(f"❌ [ERROR] 컬렉션 삭제 중 오류: {str(e)}")
+                    return False
             else:
                 debug_log(f"ℹ️ [INFO] 삭제할 컬렉션이 없습니다.")
             
