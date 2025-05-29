@@ -1,3 +1,11 @@
+# SQLite3 호환성 패치 (Streamlit Cloud용)
+import sys
+try:
+    import pysqlite3
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
+
 import os
 import chromadb
 from chromadb.config import Settings

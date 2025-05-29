@@ -1,3 +1,11 @@
+# SQLite3 호환성 패치 (Streamlit Cloud용)
+import sys
+try:
+    import pysqlite3
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass
+
 import streamlit as st
 import os
 import hashlib
@@ -178,8 +186,6 @@ def index_documents():
         else:
             st.error("❌ 문서 인덱싱에 실패했습니다.")
             return False
-
-
 
 def generate_answer(query: str, search_results: List[Dict]) -> str:
     """검색 결과를 바탕으로 답변 생성"""
