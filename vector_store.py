@@ -23,13 +23,8 @@ except ImportError:
     HAS_STREAMLIT = False
 
 def debug_log(message: str):
-    """디버깅 메시지를 print와 streamlit 둘 다에 출력"""
-    print(message)
-    if HAS_STREAMLIT:
-        try:
-            st.write(message)
-        except:
-            pass  # streamlit context가 없을 때는 무시
+    """디버깅 메시지를 콘솔에만 출력 (UI 메시지 제거)"""
+    print(message)  # 서버 로그에만 기록
 
 class VectorStore:
     def __init__(self, 

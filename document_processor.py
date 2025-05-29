@@ -93,58 +93,33 @@ class DocumentProcessor:
         """
         documents = []
         
-        print(f"🔍 [DEBUG] 문서 처리 시작: {data_folder}")
-        print(f"🔍 [DEBUG] 절대 경로: {os.path.abspath(data_folder)}")
-        
         if not os.path.exists(data_folder):
-            print(f"❌ [ERROR] {data_folder} 폴더가 존재하지 않습니다.")
+            print(f"경고: {data_folder} 폴더가 존재하지 않습니다.")
             return documents
         
         try:
             all_files = os.listdir(data_folder)
-            print(f"🔍 [DEBUG] 폴더 내 전체 파일 수: {len(all_files)}")
-            
             docx_files = [f for f in all_files if f.endswith('.docx')]
-            print(f"🔍 [DEBUG] docx 파일 수: {len(docx_files)}")
-            
-            if docx_files:
-                print(f"🔍 [DEBUG] 첫 번째 docx 파일: {docx_files[0]}")
-                print(f"🔍 [DEBUG] 처음 5개 파일: {docx_files[:5]}")
             
         except Exception as e:
-            print(f"❌ [ERROR] 폴더 읽기 오류: {str(e)}")
+            print(f"폴더 읽기 오류: {str(e)}")
             return documents
         
         if not docx_files:
-            print(f"⚠️ [WARNING] {data_folder} 폴더에 docx 파일이 없습니다.")
+            print(f"경고: {data_folder} 폴더에 docx 파일이 없습니다.")
             return documents
         
-        print(f"📚 [INFO] 총 {len(docx_files)}개의 docx 파일을 처리합니다...")
+        print(f"총 {len(docx_files)}개의 docx 파일을 처리합니다...")
         
         for i, filename in enumerate(docx_files):
             file_path = os.path.join(data_folder, filename)
-            print(f"📄 [INFO] 처리 중 ({i+1}/{len(docx_files)}): {filename}")
+            print(f"처리 중 ({i+1}/{len(docx_files)}): {filename}")
             
             try:
-                # 파일 존재 및 읽기 권한 확인
-                if not os.path.exists(file_path):
-                    print(f"❌ [ERROR] 파일이 존재하지 않음: {file_path}")
-                    continue
-                
-                if not os.access(file_path, os.R_OK):
-                    print(f"❌ [ERROR] 파일 읽기 권한 없음: {file_path}")
-                    continue
-                
-                # 파일 크기 확인
-                file_size = os.path.getsize(file_path)
-                print(f"🔍 [DEBUG] 파일 크기: {file_size} bytes")
-                
                 # 텍스트 추출
                 content = self.extract_text_from_docx(file_path)
                 
                 if content:
-                    print(f"✅ [SUCCESS] 텍스트 추출 성공, 길이: {len(content)} 문자")
-                    
                     # 텍스트를 청크로 분할
                     chunks = self.text_splitter.split_text(content)
                     
@@ -158,17 +133,14 @@ class DocumentProcessor:
                             }
                         })
                     
-                    print(f"✅ [SUCCESS] {len(chunks)}개 청크 생성")
+                    print(f"→ {len(chunks)}개 청크 생성")
                 else:
-                    print(f"❌ [ERROR] 텍스트 추출 실패: {filename}")
+                    print(f"→ 텍스트 추출 실패")
                     
             except Exception as e:
-                print(f"❌ [ERROR] 파일 처리 오류 ({filename}): {str(e)}")
-                print(f"🔍 [DEBUG] 오류 타입: {type(e).__name__}")
-                import traceback
-                print(f"🔍 [DEBUG] 스택 트레이스: {traceback.format_exc()}")
+                print(f"파일 처리 오류 ({filename}): {str(e)}")
         
-        print(f"🎉 [FINAL] 총 {len(documents)}개의 문서 청크가 생성되었습니다.")
+        print(f"총 {len(documents)}개의 문서 청크가 생성되었습니다.")
         return documents
     
     def get_document_stats(self, documents: List[Dict[str, str]]) -> Dict[str, int]:

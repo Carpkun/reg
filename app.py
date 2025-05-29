@@ -137,126 +137,60 @@ def check_api_keys():
 def initialize_components(openai_api_key: str, google_api_key: str):
     """시스템 컴포넌트 초기화"""
     try:
-        st.write("🔍 [DEBUG] initialize_components 시작")
-        
         if st.session_state.vector_store is None:
-            st.write("🔍 [DEBUG] VectorStore 생성 시작")
-            st.write(f"🔍 [DEBUG] OpenAI API 키 존재: {bool(openai_api_key)}")
-            st.write(f"🔍 [DEBUG] OpenAI API 키 길이: {len(openai_api_key) if openai_api_key else 0}")
-            
-            try:
-                # VectorStore 생성 시도
-                st.write("🔍 [DEBUG] VectorStore 객체 생성 시도...")
-                vector_store = VectorStore(openai_api_key=openai_api_key)
-                st.write("✅ [SUCCESS] VectorStore 객체 생성 완료")
-                st.session_state.vector_store = vector_store
-                st.write("✅ [SUCCESS] VectorStore 세션 상태에 저장 완료")
-            except Exception as e:
-                st.error(f"❌ [ERROR] VectorStore 생성 실패: {str(e)}")
-                st.write(f"🔍 [DEBUG] VectorStore 오류 타입: {type(e).__name__}")
-                st.write(f"🔍 [DEBUG] VectorStore 오류 상세: {e}")
-                import traceback
-                st.code(traceback.format_exc())
-                return False
-        else:
-            st.write("ℹ️ [INFO] 기존 VectorStore 사용")
+            with st.spinner("시스템 초기화 중..."):
+                st.session_state.vector_store = VectorStore(openai_api_key=openai_api_key)
         
         if st.session_state.openai_client is None:
-            st.write("🔍 [DEBUG] OpenAI 클라이언트 생성 시작")
-            try:
-                st.session_state.openai_client = OpenAI(api_key=openai_api_key)
-                st.write("✅ [SUCCESS] OpenAI 클라이언트 생성 완료")
-            except Exception as e:
-                st.error(f"❌ [ERROR] OpenAI 클라이언트 생성 실패: {str(e)}")
-                return False
-        else:
-            st.write("ℹ️ [INFO] 기존 OpenAI 클라이언트 사용")
+            st.session_state.openai_client = OpenAI(api_key=openai_api_key)
         
         if st.session_state.gemini_model is None:
-            st.write("🔍 [DEBUG] Gemini 모델 초기화 시작")
-            try:
-                genai.configure(api_key=google_api_key)
-                st.session_state.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
-                st.write("✅ [SUCCESS] Gemini 모델 초기화 완료")
-            except Exception as e:
-                st.error(f"❌ [ERROR] Gemini 모델 초기화 실패: {str(e)}")
-                return False
-        else:
-            st.write("ℹ️ [INFO] 기존 Gemini 모델 사용")
+            genai.configure(api_key=google_api_key)
+            st.session_state.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
         
-        st.write("🎉 [SUCCESS] 모든 컴포넌트 초기화 완료")
         return True
     except Exception as e:
-        st.error(f"❌ [ERROR] 시스템 초기화 전체 오류: {str(e)}")
-        st.write(f"🔍 [DEBUG] 전체 오류 타입: {type(e).__name__}")
-        import traceback
-        st.code(traceback.format_exc())
+        st.error(f"❌ 시스템 초기화 오류: {str(e)}")
         return False
 
 def index_documents():
     """문서 인덱싱 실행"""
     with st.spinner("문서를 처리하고 있습니다..."):
-        # 디버깅: 파일 시스템 상태 확인
-        import os
-        st.write(f"🔍 현재 작업 디렉토리: {os.getcwd()}")
-        
-        data_path = "./data"
-        st.write(f"🔍 data 폴더 경로: {os.path.abspath(data_path)}")
-        st.write(f"🔍 data 폴더 존재 여부: {os.path.exists(data_path)}")
-        
-        if os.path.exists(data_path):
-            files = os.listdir(data_path)
-            docx_files = [f for f in files if f.endswith('.docx')]
-            st.write(f"🔍 data 폴더 내 전체 파일 수: {len(files)}")
-            st.write(f"🔍 data 폴더 내 docx 파일 수: {len(docx_files)}")
-            if docx_files:
-                st.write(f"🔍 첫 번째 docx 파일: {docx_files[0]}")
-        else:
-            st.error(f"❌ data 폴더가 존재하지 않습니다: {os.path.abspath(data_path)}")
-            return False
-        
-        # 문서 처리
         try:
-            documents = st.session_state.document_processor.process_documents(data_path)
-            st.write(f"🔍 처리된 문서 청크 수: {len(documents) if documents else 0}")
-        except Exception as e:
-            st.error(f"❌ 문서 처리 중 오류: {str(e)}")
-            st.write(f"🔍 오류 상세: {type(e).__name__}: {e}")
-            return False
-        
-        if not documents:
-            st.warning("⚠️ data 폴더에 처리할 docx 파일이 없거나 문서 처리에 실패했습니다.")
-            return False
-        
-        # 벡터 스토어에 추가
-        try:
+            # 문서 처리
+            documents = st.session_state.document_processor.process_documents("./data")
+            
+            if not documents:
+                st.warning("⚠️ data 폴더에 처리할 docx 파일이 없거나 문서 처리에 실패했습니다.")
+                return False
+            
+            # 벡터 스토어에 추가
             success = st.session_state.vector_store.update_documents(documents)
-            st.write(f"🔍 벡터 스토어 업데이트 결과: {success}")
+            
+            if success:
+                st.session_state.indexed_documents = True
+                st.success(f"✅ {len(documents)}개의 문서 청크가 성공적으로 인덱싱되었습니다!")
+                
+                # 통계 정보 표시
+                stats = st.session_state.document_processor.get_document_stats(documents)
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("총 문서 수", stats['총_문서수'])
+                with col2:
+                    st.metric("총 청크 수", stats['총_청크수'])
+                with col3:
+                    st.metric("평균 청크 길이", f"{stats['평균_청크길이']} 문자")
+                with col4:
+                    st.metric("총 문자 수", f"{stats['총_문자수']:,}")
+                
+                return True
+            else:
+                st.error("❌ 문서 인덱싱에 실패했습니다.")
+                return False
+                
         except Exception as e:
-            st.error(f"❌ 벡터 스토어 업데이트 중 오류: {str(e)}")
-            st.write(f"🔍 오류 상세: {type(e).__name__}: {e}")
-            return False
-        
-        if success:
-            st.session_state.indexed_documents = True
-            st.success(f"✅ {len(documents)}개의 문서 청크가 성공적으로 인덱싱되었습니다!")
-            
-            # 통계 정보 표시
-            stats = st.session_state.document_processor.get_document_stats(documents)
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.metric("총 문서 수", stats['총_문서수'])
-            with col2:
-                st.metric("총 청크 수", stats['총_청크수'])
-            with col3:
-                st.metric("평균 청크 길이", f"{stats['평균_청크길이']} 문자")
-            with col4:
-                st.metric("총 문자 수", f"{stats['총_문자수']:,}")
-            
-            return True
-        else:
-            st.error("❌ 문서 인덱싱에 실패했습니다.")
+            st.error(f"❌ 문서 처리 중 오류가 발생했습니다: {str(e)}")
             return False
 
 def generate_answer(query: str, search_results: List[Dict]) -> str:
@@ -337,13 +271,13 @@ def main():
             st.success("✅ 기존 인덱싱 데이터를 로드했습니다! 바로 검색을 시작할 수 있습니다.")
         else:
             # 새로 인덱싱 필요
-            with st.spinner("📚 문서를 인덱싱하고 있습니다... (최초 1회 또는 문서 변경 시)"):
+            with st.spinner("📚 문서를 인덱싱하고 있습니다..."):
                 success = index_documents()
                 if success:
                     save_documents_hash()  # 해시 저장
                     st.success("✅ 문서 인덱싱이 완료되었습니다! 이제 검색을 시작할 수 있습니다.")
                 else:
-                    st.error("❌ 문서 인덱싱에 실패했습니다. data 폴더에 docx 파일이 있는지 확인해주세요.")
+                    st.error("❌ 문서 인덱싱에 실패했습니다. 시스템 관리자에게 문의하세요.")
     
     # 검색 설정 기본값
     search_k = 5
