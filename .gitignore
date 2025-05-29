@@ -40,9 +40,6 @@ env/
 # ChromaDB
 chroma_db/
 
-# Local data
-data/
-
 # OS
 .DS_Store
 Thumbs.db
