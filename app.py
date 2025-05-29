@@ -137,19 +137,60 @@ def check_api_keys():
 def initialize_components(openai_api_key: str, google_api_key: str):
     """시스템 컴포넌트 초기화"""
     try:
+        st.write("🔍 [DEBUG] initialize_components 시작")
+        
         if st.session_state.vector_store is None:
-            st.session_state.vector_store = VectorStore(openai_api_key=openai_api_key)
+            st.write("🔍 [DEBUG] VectorStore 생성 시작")
+            st.write(f"🔍 [DEBUG] OpenAI API 키 존재: {bool(openai_api_key)}")
+            st.write(f"🔍 [DEBUG] OpenAI API 키 길이: {len(openai_api_key) if openai_api_key else 0}")
+            
+            try:
+                # VectorStore 생성 시도
+                st.write("🔍 [DEBUG] VectorStore 객체 생성 시도...")
+                vector_store = VectorStore(openai_api_key=openai_api_key)
+                st.write("✅ [SUCCESS] VectorStore 객체 생성 완료")
+                st.session_state.vector_store = vector_store
+                st.write("✅ [SUCCESS] VectorStore 세션 상태에 저장 완료")
+            except Exception as e:
+                st.error(f"❌ [ERROR] VectorStore 생성 실패: {str(e)}")
+                st.write(f"🔍 [DEBUG] VectorStore 오류 타입: {type(e).__name__}")
+                st.write(f"🔍 [DEBUG] VectorStore 오류 상세: {e}")
+                import traceback
+                st.code(traceback.format_exc())
+                return False
+        else:
+            st.write("ℹ️ [INFO] 기존 VectorStore 사용")
         
         if st.session_state.openai_client is None:
-            st.session_state.openai_client = OpenAI(api_key=openai_api_key)
+            st.write("🔍 [DEBUG] OpenAI 클라이언트 생성 시작")
+            try:
+                st.session_state.openai_client = OpenAI(api_key=openai_api_key)
+                st.write("✅ [SUCCESS] OpenAI 클라이언트 생성 완료")
+            except Exception as e:
+                st.error(f"❌ [ERROR] OpenAI 클라이언트 생성 실패: {str(e)}")
+                return False
+        else:
+            st.write("ℹ️ [INFO] 기존 OpenAI 클라이언트 사용")
         
         if st.session_state.gemini_model is None:
-            genai.configure(api_key=google_api_key)
-            st.session_state.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+            st.write("🔍 [DEBUG] Gemini 모델 초기화 시작")
+            try:
+                genai.configure(api_key=google_api_key)
+                st.session_state.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+                st.write("✅ [SUCCESS] Gemini 모델 초기화 완료")
+            except Exception as e:
+                st.error(f"❌ [ERROR] Gemini 모델 초기화 실패: {str(e)}")
+                return False
+        else:
+            st.write("ℹ️ [INFO] 기존 Gemini 모델 사용")
         
+        st.write("🎉 [SUCCESS] 모든 컴포넌트 초기화 완료")
         return True
     except Exception as e:
-        st.error(f"시스템 초기화 오류: {str(e)}")
+        st.error(f"❌ [ERROR] 시스템 초기화 전체 오류: {str(e)}")
+        st.write(f"🔍 [DEBUG] 전체 오류 타입: {type(e).__name__}")
+        import traceback
+        st.code(traceback.format_exc())
         return False
 
 def index_documents():
