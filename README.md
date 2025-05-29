@@ -77,6 +77,8 @@ reg/
 ├── vector_store.py        # 벡터 스토어 관리
 ├── requirements.txt       # 의존성
 ├── .env                  # 환경 변수 (API 키)
+├── .gitignore            # Git 제외 파일 목록
+├── env_example.txt       # 환경 변수 예시 파일
 ├── data/                 # 규정 문서들 (docx 파일)
 └── chroma_db/            # 벡터 데이터베이스 저장소 
 ```
